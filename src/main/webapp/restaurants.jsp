@@ -184,20 +184,41 @@
             box-shadow: 0 10px 30px rgba(255, 112, 67, 0.25);
         }
 
-        .card-image-placeholder {
+        /* === MODIFIED CSS === */
+        /* This now acts as a container for the image or the icon */
+        .card-image {
             height: 180px;
             background: linear-gradient(135deg, #ffe0b2, #ffccbc);
+            overflow: hidden; /* Ensures image doesn't break layout */
+        }
+
+        /* This is the new image tag */
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* This makes the image cover the area */
+            transition: transform 0.4s ease;
+        }
+
+        /* This is the placeholder icon for restaurants without a specific image */
+        .card-image .placeholder-icon {
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            height: 100%;
             color: #ff7043;
             font-size: 50px;
             transition: transform 0.4s ease;
         }
 
-        .restaurant-card:hover .card-image-placeholder {
+        /* Apply hover zoom to both the image and the icon */
+        .restaurant-card:hover .card-image img,
+        .restaurant-card:hover .card-image .placeholder-icon {
             transform: scale(1.05);
         }
+        /* === END OF MODIFIED CSS === */
+
 
         .card-body {
             padding: 20px;
@@ -347,7 +368,7 @@
             noResultsMsg.style.display = visibleCount === 0 ? "block" : "none";
         }
 
-        // --- Scroll Reveal Animation ---
+        // --- Scroll Reveal Animation (Unchanged) ---
         window.addEventListener("scroll", () => {
             document.querySelectorAll(".restaurant-card").forEach((card) => {
                 const rect = card.getBoundingClientRect();
@@ -360,7 +381,6 @@
 </head>
 <body>
 
-    <!-- Floating Food Icons -->
     <div class="floating-food">
         <i class="fa-solid fa-pizza-slice" style="left: 15%; animation-delay: 0s;"></i>
         <i class="fa-solid fa-burger" style="left: 45%; animation-delay: 4s;"></i>
@@ -392,13 +412,35 @@
                         String name = r.getString("name");
                         String address = r.getString("address");
                         double rating = r.getDouble("rating");
+
+                        // === NEW JAVA LOGIC TO GET IMAGE URL ===
+                        String imageUrl = null; // Default to null (will show placeholder)
+
+                        if (name.equalsIgnoreCase("Tandoori Tales")) {
+                            imageUrl = "https://i.postimg.cc/j5LRzJrc/Gemini-Generated-Image-4k4mq54k4mq54k4m.png"; // <-- REPLACE THIS LINK
+                        } else if (name.equalsIgnoreCase("Chowman")) {
+                            imageUrl = "https://i.postimg.cc/LXw2v6H1/Gemini-Generated-Image-kzulackzulackzul.png"; // <-- REPLACE THIS LINK
+                        } else if (name.equalsIgnoreCase("Pizza Hut")) {
+                            imageUrl = "https://i.postimg.cc/V6dzjbcR/Gemini-Generated-Image-45txaf45txaf45tx.png"; // <-- REPLACE THIS LINK
+                        } else if (name.equalsIgnoreCase("Mocambo")) {
+                            imageUrl = "https://i.postimg.cc/0Qb9pJqZ/Gemini-Generated-Image-lmji0flmji0flmji.png"; // <-- REPLACE THIS LINK
+                        } else if (name.equalsIgnoreCase("Bhojohori Manna")) {
+                            imageUrl = "https://i.postimg.cc/TwpTrWXp/Gemini-Generated-Image-fymyfpfymyfpfymy.png"; // <-- REPLACE THIS LINK
+                        }
+                        // === END OF NEW JAVA LOGIC ===
             %>
 
             <div class="restaurant-card">
-                <div class="card-image-placeholder">
-                    <i class="fa-solid fa-utensils"></i>
-                </div>
 
+                <div class="card-image">
+                    <% if (imageUrl != null) { %>
+                        <img src="<%= imageUrl %>" alt="<%= name %> restaurant">
+                    <% } else { %>
+                        <div class="placeholder-icon">
+                            <i class="fa-solid fa-utensils"></i>
+                        </div>
+                    <% } %>
+                </div>
                 <div class="card-body">
                     <h2><%= name %></h2>
                     <p class="address"><%= address %></p>
