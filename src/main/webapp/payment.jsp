@@ -42,23 +42,84 @@
         }
     }
 
-    // ✅ Coupon logic
+    // ✅ Coupon logic (safe type handling)
     String couponCode = request.getParameter("couponCode");
     double discountPercent = 0;
+    String couponMessage = null;
 
     if (couponCode != null && !couponCode.trim().isEmpty()) {
         couponCode = couponCode.trim().toUpperCase();
-        switch (couponCode) {
-            case "ABHI10": discountPercent = 10; break;
-            case "FIRST50": discountPercent = 50; break;
-            case "FREEDINE": discountPercent = 100; break;
-            case "TASTY20": discountPercent = 20; break;
-            default: discountPercent = 0; break;
+        try (MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017")) {
+            MongoDatabase db = mongoClient.getDatabase("AbhiSwaadDB");
+            MongoCollection<Document> couponColl = db.getCollection("coupons");
+
+            Document coupon = couponColl.find(new Document("code", couponCode)).first();
+            if (coupon != null) {
+                Object discountObj = coupon.get("discount");
+                if (discountObj instanceof Number)
+                    discountPercent = ((Number) discountObj).doubleValue();
+                else if (discountObj instanceof String)
+                    discountPercent = Double.parseDouble((String) discountObj);
+
+                Object expiryObj = coupon.get("expiry");
+                String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
+                boolean valid = true;
+                String expiryDateStr = null;
+
+                if (expiryObj instanceof java.util.Date) {
+                    expiryDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format((java.util.Date) expiryObj);
+                    valid = expiryDateStr.compareTo(today) >= 0;
+                } else if (expiryObj instanceof String) {
+                    expiryDateStr = (String) expiryObj;
+                    valid = expiryDateStr.compareTo(today) >= 0;
+                }
+
+                if (valid) {
+                    couponMessage = "✅ Coupon \"" + couponCode + "\" applied successfully!"
+                            + (expiryDateStr != null ? " (valid till " + expiryDateStr + ")" : "");
+                } else {
+                    discountPercent = 0;
+                    couponMessage = "⚠️ Coupon expired"
+                            + (expiryDateStr != null ? " on " + expiryDateStr : "") + ".";
+                }
+            } else {
+                couponMessage = "❌ Invalid coupon code!";
+            }
+        } catch (Exception e) {
+            couponMessage = "⚠️ Error validating coupon.";
+            e.printStackTrace();
         }
     }
 
     double discountAmount = total * (discountPercent / 100.0);
     double finalTotal = total - discountAmount;
+
+    // ✅ Fetch all active coupons for popup
+    List<Document> availableCoupons = new ArrayList<>();
+    try (MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017")) {
+        MongoDatabase db = mongoClient.getDatabase("AbhiSwaadDB");
+        MongoCollection<Document> couponColl = db.getCollection("coupons");
+        FindIterable<Document> all = couponColl.find();
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
+
+        for (Document c : all) {
+            Object expiryObj = c.get("expiry");
+            String expiryStr = null;
+            boolean valid = true;
+
+            if (expiryObj instanceof java.util.Date) {
+                expiryStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format((java.util.Date) expiryObj);
+                valid = expiryStr.compareTo(today) >= 0;
+            } else if (expiryObj instanceof String) {
+                expiryStr = (String) expiryObj;
+                valid = expiryStr.compareTo(today) >= 0;
+            }
+
+            if (valid) availableCoupons.add(c);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 %>
 
 <html>
@@ -75,7 +136,6 @@
             background-size: 400% 400%;
             animation: gradientShift 12s ease infinite;
             padding: 40px 20px;
-            overflow-x: hidden;
             color: #4e342e;
         }
 
@@ -85,31 +145,9 @@
             100% { background-position: 0% 50%; }
         }
 
-        .floating-food {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        .floating-food i {
-            position: absolute;
-            color: rgba(255, 112, 67, 0.1);
-            font-size: 30px;
-            animation: floatFood 18s linear infinite;
-        }
-
-        @keyframes floatFood {
-            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
-        }
-
         .container {
             max-width: 650px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             margin: auto;
             padding: 30px;
             border-radius: 16px;
@@ -117,130 +155,73 @@
             animation: fadeInUp 1s ease;
         }
 
-        h1 {
+        .coupon-box {
+            margin: 25px 0;
+            text-align: center;
+        }
+
+        .coupon-box button.view-btn {
+            background: #ffa726;
+            border: none;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            margin-top: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .coupon-box button.view-btn:hover {
+            background: #fb8c00;
+            transform: scale(1.05);
+        }
+
+        .coupon-popup {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            width: 400px;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 100;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .coupon-popup h2 {
             text-align: center;
             color: #e64a19;
             margin-bottom: 10px;
         }
 
-        h3 {
-            text-align: center;
-            color: #6d4c41;
-            margin-bottom: 25px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            animation: fadeIn 1.5s ease;
-        }
-
-        th, td {
-            padding: 10px;
+        .coupon-popup .coupon-item {
             border-bottom: 1px solid #eee;
-            text-align: center;
+            padding: 10px 0;
         }
 
-        th {
-            background: #ffe0b2;
-            color: #5d4037;
+        .coupon-popup .coupon-item p {
+            margin: 3px 0;
+            font-size: 14px;
         }
 
-        .coupon-box {
-            margin: 25px 0;
-            text-align: center;
-            animation: fadeInUp 1s ease;
-        }
-
-        .coupon-box input {
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            width: 60%;
-            text-align: center;
-            transition: 0.3s;
-        }
-
-        .coupon-box input:focus {
-            border-color: #ff7043;
-            box-shadow: 0 0 10px rgba(255,112,67,0.4);
-            outline: none;
-        }
-
-        .coupon-box button {
+        .coupon-popup .close-btn {
+            display: block;
+            margin: 10px auto 0;
             background: #ff7043;
-            border: none;
             color: white;
-            padding: 10px 16px;
-            border-radius: 6px;
-            margin-left: 5px;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
             cursor: pointer;
             transition: 0.3s;
         }
 
-        .coupon-box button:hover {
-            background: #e64a19;
-            transform: scale(1.05);
-        }
-
-        .total-box {
-            background: #fff8f5;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: right;
-            animation: fadeInUp 1s ease;
-        }
-
-        .total-box h2 {
-            color: #d84315;
-            margin: 0;
-        }
-
-        .discount-text {
-            color: green;
-            font-weight: 600;
-        }
-
-        .btn {
-            display: block;
-            text-align: center;
-            background: #ff7043;
-            color: white;
-            padding: 14px;
-            border-radius: 8px;
-            margin-top: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.3s;
-            animation: pulseGlow 2s infinite;
-        }
-
-        .btn:hover {
-            background: #e64a19;
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255,112,67,0.5);
-        }
-
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 rgba(255,112,67,0.4); }
-            50% { box-shadow: 0 0 15px rgba(255,112,67,0.4); }
-            100% { box-shadow: 0 0 0 rgba(255,112,67,0.4); }
-        }
-
-        .success {
-            display: none;
-            color: green;
-            text-align: center;
-            font-size: 16px;
-            margin-top: 15px;
-        }
-
-        .empty {
-            text-align: center;
-            color: red;
-            font-weight: bold;
+        .coupon-popup .close-btn:hover {
+            background: #d84315;
         }
 
         @keyframes fadeInUp {
@@ -255,14 +236,6 @@
     </style>
 </head>
 <body>
-
-    <!-- Floating food background -->
-    <div class="floating-food">
-        <i class="fa-solid fa-pizza-slice" style="left: 10%; animation-delay: 0s;"></i>
-        <i class="fa-solid fa-burger" style="left: 40%; animation-delay: 3s;"></i>
-        <i class="fa-solid fa-ice-cream" style="left: 70%; animation-delay: 6s;"></i>
-        <i class="fa-solid fa-mug-hot" style="left: 90%; animation-delay: 9s;"></i>
-    </div>
 
     <div class="container">
         <h1>Payment Summary</h1>
@@ -283,7 +256,6 @@
             <% } %>
         </table>
 
-        <!-- Coupon Section -->
         <div class="coupon-box">
             <form method="get">
                 <input type="hidden" name="restaurant" value="<%= restaurantName %>">
@@ -293,9 +265,15 @@
                 <input type="text" name="couponCode" placeholder="Enter coupon code (e.g. ABHI10)" value="<%= (couponCode!=null)?couponCode:"" %>">
                 <button type="submit">Apply</button>
             </form>
+            <button class="view-btn" id="viewCouponsBtn">🎟️ View Available Coupons</button>
+
+            <% if (couponMessage != null) { %>
+                <p class="coupon-message" style="color:<%= couponMessage.startsWith("✅")?"green":"red" %>;">
+                    <%= couponMessage %>
+                </p>
+            <% } %>
         </div>
 
-        <!-- Total & Discount -->
         <div class="total-box">
             <p>Subtotal: ₹<%= total %></p>
             <% if (discountPercent > 0) { %>
@@ -304,7 +282,6 @@
             <h2>Total Payable: ₹<%= finalTotal %></h2>
         </div>
 
-        <!-- Proceed Button -->
         <form id="billForm" action="generateBill" method="post">
             <input type="hidden" name="restaurant" value="<%= restaurantName %>">
             <input type="hidden" name="total" value="<%= finalTotal %>">
@@ -318,17 +295,37 @@
             <% } %>
             <a href="#" class="btn" id="payBtn">Proceed to Pay</a>
         </form>
-
-        <p id="done" class="success">✅ Payment Successful! Bill Generated in your Downloads folder.</p>
         <% } %>
     </div>
 
+    <!-- Coupon Popup -->
+    <div id="couponPopup" class="coupon-popup">
+        <h2>🎁 Active Coupons</h2>
+        <% if (availableCoupons.isEmpty()) { %>
+            <p>No active coupons right now!</p>
+        <% } else {
+            for (Document c : availableCoupons) {
+                String code = c.getString("code");
+                Object dis = c.get("discount");
+                Object exp = c.get("expiry");
+        %>
+            <div class="coupon-item">
+                <p><b>Code:</b> <%= code %></p>
+                <p><b>Discount:</b> <%= dis %>%</p>
+                <p><b>Expiry:</b> <%= exp %></p>
+            </div>
+        <% } } %>
+        <button class="close-btn" id="closePopup">Close</button>
+    </div>
+
     <script>
-        document.getElementById("payBtn")?.addEventListener("click", function(e) {
+        const popup = document.getElementById('couponPopup');
+        document.getElementById('viewCouponsBtn').onclick = () => popup.style.display = 'block';
+        document.getElementById('closePopup').onclick = () => popup.style.display = 'none';
+        document.getElementById('payBtn')?.addEventListener('click', e => {
             e.preventDefault();
-            this.style.display = "none";
-            document.getElementById("done").style.display = "block";
-            document.getElementById("billForm").submit();
+            e.target.style.display = 'none';
+            document.getElementById('billForm').submit();
         });
     </script>
 </body>

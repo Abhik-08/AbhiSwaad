@@ -19,10 +19,9 @@ public class BillGeneratorServlet extends HttpServlet {
 
         response.setContentType("application/pdf");
 
+        // ✅ Fetch core details
         String restaurantName = request.getParameter("restaurant");
-        String totalAmount = request.getParameter("total");  // this is the *final* amount (after discount)
-
-        // Optional: Retrieve coupon details if present
+        String totalAmount = request.getParameter("total"); // Final amount after discount
         String couponCode = request.getParameter("couponCode");
         String discountPercent = request.getParameter("discountPercent");
         String discountAmount = request.getParameter("discountAmount");
@@ -32,31 +31,57 @@ public class BillGeneratorServlet extends HttpServlet {
         String filePath = home + "/Downloads/AbhiSwaad_Bill.pdf";
 
         try {
-            Document document = new Document();
+            // Create PDF
+            Document document = new Document(PageSize.A4, 40, 40, 50, 50);
             PdfWriter.getInstance(document, new FileOutputStream(filePath));
             document.open();
 
-            // 🧾 Title
-            Font titleFont = new Font(Font.FontFamily.HELVETICA, 22, Font.BOLD, BaseColor.ORANGE);
-            Paragraph title = new Paragraph("AbhiSwaad Food Bill\n\n", titleFont);
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
+            // 🧡 Header (Brand)
+            Font brandFont = new Font(Font.FontFamily.HELVETICA, 26, Font.BOLD, new BaseColor(255, 112, 67));
+            Paragraph brand = new Paragraph("AbhiSwaad\n", brandFont);
+            brand.setAlignment(Element.ALIGN_CENTER);
+            document.add(brand);
 
-            // 🍴 Restaurant name
-            Font subFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD);
-            document.add(new Paragraph("Restaurant: " + restaurantName, subFont));
+            Font subFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL, BaseColor.DARK_GRAY);
+            Paragraph tagline = new Paragraph("Taste the Tradition of Kolkata 🍴", subFont);
+            tagline.setAlignment(Element.ALIGN_CENTER);
+            document.add(tagline);
 
-            // 📅 Date
-            String date = new SimpleDateFormat("dd-MM-yyyy HH:mm").format(new Date());
-            document.add(new Paragraph("Date: " + date + "\n\n"));
+            document.add(new Paragraph("\n----------------------------------------\n"));
 
-            // 🍽️ Table for ordered items
-            PdfPTable table = new PdfPTable(3);
+            // 📅 Order Details
+            String date = new SimpleDateFormat("dd MMM yyyy, HH:mm a").format(new Date());
+            Font infoFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
+            document.add(new Paragraph("Restaurant: " + restaurantName, infoFont));
+            document.add(new Paragraph("Date: " + date, infoFont));
+            document.add(new Paragraph("\n"));
+
+            // 🍽️ Ordered Items Table
+            PdfPTable table = new PdfPTable(new float[]{3, 1, 2});
             table.setWidthPercentage(100);
             table.setSpacingBefore(10);
-            table.addCell("Dish");
-            table.addCell("Quantity");
-            table.addCell("Subtotal (₹)");
+
+            Font headFont = new Font(Font.FontFamily.HELVETICA, 13, Font.BOLD, BaseColor.WHITE);
+            PdfPCell c1;
+
+            c1 = new PdfPCell(new Phrase("Dish", headFont));
+            c1.setHorizontalAlignment(Element.ALIGN_CENTER);
+            c1.setBackgroundColor(new BaseColor(255, 112, 67));
+            table.addCell(c1);
+
+            c1 = new PdfPCell(new Phrase("Qty", headFont));
+            c1.setHorizontalAlignment(Element.ALIGN_CENTER);
+            c1.setBackgroundColor(new BaseColor(255, 112, 67));
+            table.addCell(c1);
+
+            c1 = new PdfPCell(new Phrase("Subtotal (₹)", headFont));
+            c1.setHorizontalAlignment(Element.ALIGN_CENTER);
+            c1.setBackgroundColor(new BaseColor(255, 112, 67));
+            table.addCell(c1);
+
+            table.setHeaderRows(1);
+
+            Font tableFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL);
 
             for (String key : params.keySet()) {
                 if (key.startsWith("dish_")) {
@@ -64,54 +89,70 @@ public class BillGeneratorServlet extends HttpServlet {
                     String qty = request.getParameter("qty_" + dishName);
                     String subtotal = request.getParameter("sub_" + dishName);
                     if (qty != null && !qty.equals("0")) {
-                        table.addCell(dishName);
-                        table.addCell(qty);
-                        table.addCell(subtotal);
+                        table.addCell(new Phrase(dishName, tableFont));
+                        table.addCell(new Phrase(qty, tableFont));
+                        table.addCell(new Phrase("₹" + subtotal, tableFont));
                     }
                 }
             }
 
             document.add(table);
+            document.add(new Paragraph("\n"));
 
-            // 💸 Summary section
-            document.add(new Paragraph("\n", new Font(Font.FontFamily.HELVETICA, 12)));
+            // 💸 Summary Section
+            Font summaryFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.BLACK);
+            PdfPTable summary = new PdfPTable(2);
+            summary.setWidthPercentage(50);
+            summary.setHorizontalAlignment(Element.ALIGN_RIGHT);
 
-            // If coupon applied, show discount breakdown
-            if (couponCode != null && !couponCode.trim().isEmpty()) {
-                Font discountFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, new BaseColor(0, 128, 0));
-                Paragraph discountInfo = new Paragraph(
-                        "Coupon Applied: " + couponCode.toUpperCase() +
-                                "  (" + (discountPercent != null ? discountPercent : "0") + "% OFF)",
-                        discountFont
-                );
-                discountInfo.setAlignment(Element.ALIGN_RIGHT);
-                document.add(discountInfo);
-
-                if (discountAmount != null) {
-                    Paragraph discountValue = new Paragraph("Discount Amount: ₹" + discountAmount, discountFont);
-                    discountValue.setAlignment(Element.ALIGN_RIGHT);
-                    document.add(discountValue);
+            // Subtotal (Before discount)
+            double subtotalCalc = 0;
+            for (String key : params.keySet()) {
+                if (key.startsWith("sub_")) {
+                    subtotalCalc += Double.parseDouble(request.getParameter(key));
                 }
             }
 
-            // Final total
-            Font totalFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD, BaseColor.RED);
-            Paragraph total = new Paragraph("\nTotal Payable: ₹" + totalAmount, totalFont);
-            total.setAlignment(Element.ALIGN_RIGHT);
-            document.add(total);
+            summary.addCell(new Phrase("Subtotal:", summaryFont));
+            summary.addCell(new Phrase("₹" + String.format("%.2f", subtotalCalc), summaryFont));
 
-            // ✅ Footer note
+            // If coupon applied
+            if (couponCode != null && !couponCode.trim().isEmpty() &&
+                    discountPercent != null && Double.parseDouble(discountPercent) > 0) {
+                Font greenFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, new BaseColor(0, 128, 0));
+                summary.addCell(new Phrase("Coupon (" + couponCode + "):", greenFont));
+                summary.addCell(new Phrase("-₹" + discountAmount + " (" + discountPercent + "% OFF)", greenFont));
+            }
+
+            // Final Total
+            Font redFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD, BaseColor.RED);
+            summary.addCell(new Phrase("Total Payable:", redFont));
+            summary.addCell(new Phrase("₹" + totalAmount, redFont));
+
+            document.add(summary);
+
+            // 💬 Footer
+            document.add(new Paragraph("\n"));
             Paragraph thank = new Paragraph(
-                    "\nThank you for ordering from AbhiSwaad!\nWe hope you enjoy your meal 🍲",
-                    new Font(Font.FontFamily.HELVETICA, 12, Font.ITALIC)
+                    "Thank you for ordering from AbhiSwaad!\nWe hope to serve you again soon 💛",
+                    new Font(Font.FontFamily.HELVETICA, 12, Font.ITALIC, BaseColor.GRAY)
             );
             thank.setAlignment(Element.ALIGN_CENTER);
             document.add(thank);
 
+            document.add(new Paragraph("\n"));
+            Paragraph copyright = new Paragraph(
+                    "© 2025 AbhiSwaad — Made with ❤ by Abhik Mukherjee",
+                    new Font(Font.FontFamily.HELVETICA, 10, Font.NORMAL, BaseColor.LIGHT_GRAY)
+            );
+            copyright.setAlignment(Element.ALIGN_CENTER);
+            document.add(copyright);
+
             document.close();
 
             response.getWriter().write("✅ Bill generated successfully! Check your Downloads folder.");
-            System.out.println("Bill saved at: " + filePath);
+            System.out.println("📄 Bill saved at: " + filePath);
+
         } catch (Exception e) {
             e.printStackTrace();
             response.getWriter().write("❌ Failed to generate bill: " + e.getMessage());
