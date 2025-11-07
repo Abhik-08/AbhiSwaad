@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact name="AbhiSwaad_war_exploded">
+    <output-path>$PROJECT_DIR$/out/artifacts/AbhiSwaad_war_exploded</output-path>
+    <root id="root">
+      <element id="module-output" name="AbhiSwaad" />
+      <element id="dir-copy" path="$PROJECT_DIR$/src/main/webapp" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/webapp/ordersuccess.jsp" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/webapp/trackOrder.jsp" />
+    </root>
+  </artifact>
+</component>
