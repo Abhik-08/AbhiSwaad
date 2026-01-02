@@ -1,42 +1,39 @@
 # 🍽️ AbhiSwaad – Food Order Management System
 
-AbhiSwaad is a full-stack Java-based food order management web application designed to digitalize restaurant ordering and management processes. The system allows users to browse restaurants, explore menus, place food orders, apply discount coupons, make payments, and download professionally generated PDF bills.
-
-The application is developed using **JSP, Java Servlets, MongoDB, and Apache Tomcat**, and follows a **3-Tier Architecture** to ensure modularity, scalability, and clean separation between presentation, business logic, and data layers.
+AbhiSwaad is a Java-based food order management web application that allows users to browse restaurants, explore menus, place food orders, apply discount coupons, view payment summaries, and download PDF bills.  
+The project is built using JSP, Java Servlets, MongoDB, and Apache Tomcat, following a 3-Tier Architecture.
 
 ---
 
-## 🚀 Key Features
+## 🚀 Features
 
-### USER FEATURES
-- User Registration & Login using secure HTTP sessions  
-- Browse preloaded popular Kolkata restaurants  
-- View restaurant-specific menus with prices  
-- Select food items with quantity control  
-- Apply discount coupons (e.g., FIRST50, ABHI10)  
-- View payment summary with real-time calculation  
-- Auto-generate and download PDF bill after payment  
-- Secure logout with session invalidation  
+### 👨‍🍳 User Features
+- User Registration & Login using HTTP Sessions
+- Browse popular Kolkata restaurants
+- View restaurant-wise food menus
+- Select food items with quantity control
+- Apply discount coupons (FIRST50, ABHI10, etc.)
+- View real-time payment summary
+- Generate and download PDF bill
+- Secure logout functionality
 
-### ADMIN FEATURES
-- Admin authentication  
-- View all placed orders  
-- Update order status (Pending, Paid, Delivered)  
-- Manage restaurant and menu information  
+### 🧑‍💼 Admin Features
+- Admin login
+- View all user orders
+- Update order status (Pending / Paid / Delivered)
+- Manage restaurant and menu data
 
 ---
 
 ## 🧩 System Architecture
 
 Presentation Layer (JSP, HTML, CSS)  
-  ↓  
+↓  
 Controller Layer (Java Servlets)  
-  ↓  
-Data Access Layer (DAO Classes)  
-  ↓  
+↓  
+DAO Layer (Database Operations)  
+↓  
 MongoDB Database  
-
-The architecture ensures better maintainability, easy debugging, and future scalability.
 
 ---
 
@@ -52,102 +49,68 @@ IDE       : IntelliJ IDEA
 
 ---
 
-## 📸 Screenshots (User Interface)
+## 📸 Screenshots
 
-### Figure 1 – Home Page
-The Home Page serves as the entry point of AbhiSwaad, welcoming users with a clean and visually appealing interface. It introduces the platform’s purpose and provides quick navigation options to explore restaurants and start ordering.
+### Home Page
+![Home Page](screenshots/figure1_home.png)
 
-![Figure 4 – Home Page](screenshots/figure4_home.png)
+### Features Window
+![Features Window](screenshots/figure2_features.png)
 
----
+### Restaurants Browsing Page
+![Restaurants Page](screenshots/figure3_restaurants.png)
 
-### Figure 2 – Features Window
-This section highlights the core strengths of AbhiSwaad such as Fast Delivery, Top Restaurants, and Secure Payments. It builds user trust and encourages engagement through a modern, food-themed design.
+### Menu Page (Pizza Hut)
+![Menu Page](screenshots/figure4_menu.png)
 
-![Figure 5 – Features Window](screenshots/figure5_features.png)
+### Available Coupons
+![Coupons](screenshots/figure5_coupons.png)
 
----
+### Payment Summary
+![Payment Summary](screenshots/figure6_payment.png)
 
-### Figure 3 – Restaurants Browsing Page
-The Restaurants Browsing Page displays a curated list of popular Kolkata restaurants including Pizza Hut, Mocambo, Chowman, and Tandoori Tales. Users can view restaurant details and navigate to menus easily.
-
-![Figure 6 – Restaurants Browsing Page](screenshots/figure6_restaurants.png)
-
----
-
-### Figure 3 – Menu Page (Pizza Hut)
-The Menu Page shows all available dishes with prices and quantity selectors. Users can choose multiple food items and proceed smoothly to the payment process.
-
-![Figure 7 – Menu Page](screenshots/figure7_menu.png)
+### PDF Bill Generated
+![PDF Bill](screenshots/figure7_bill.png)
 
 ---
 
-### Figure 4 – Available Coupons
-This page lists all active discount coupons with their codes, discount percentages, and expiry dates, allowing users to save money during checkout.
+## ▶️ Steps to Run (Using IntelliJ IDEA)
 
-![Figure 8 – Available Coupons](screenshots/figure8_coupons.png)
-
----
-
-### Figure 6 – Payment Summary Page
-The Payment Summary Page displays selected items, subtotal, applied coupon discount, and final payable amount. It ensures transparency before order confirmation.
-
-![Figure 9 – Payment Summary](screenshots/figure9_payment.png)
-
----
-
-### Figure 7 – PDF Bill Generated
-After successful payment, a detailed PDF bill is automatically generated using iTextPDF. The bill includes order details, applied discounts, and the final amount.
-
-![Figure 10 – PDF Bill](screenshots/figure10_bill.png)
-
----
-
-## ▶️ How to Run Locally (IntelliJ IDEA)
-
-git clone https://github.com/your-username/AbhiSwaad.git
-
+git clone https://github.com/Abhik-08/AbhiSwaad.git
 cd AbhiSwaad
+mvn clean install
 
-# Open project in IntelliJ IDEA  
-# File → Open → Select AbhiSwaad folder  
+Open IntelliJ IDEA  
+File -> Open -> Select AbhiSwaad folder  
+Set Project SDK -> JDK 17  
+Run -> Edit Configurations -> Add Tomcat (Local)  
+Select Apache Tomcat 10.1  
+Click Run ▶️  
 
-# Set Java SDK  
-# Project Structure → SDK → JDK 17+  
-
-# Configure Apache Tomcat  
-# Run → Edit Configurations → Add Tomcat (Local)  
-
-# Ensure MongoDB is running locally  
+Ensure MongoDB is running locally:  
 mongodb://localhost:27017  
 
-# Build the project  
-mvn clean install  
-
-# Run on Tomcat  
-# Click Run ▶️  
-
-# Open in browser  
+Application URL:  
 http://localhost:8080/AbhiSwaad  
 
 ---
 
 ## 🧠 Future Enhancements
 
-- Online payment gateway integration (UPI, Debit/Credit Cards)  
-- Live order tracking system  
-- Sales analytics and reporting dashboard  
-- AI-based food recommendations  
-- Mobile application (Android / iOS)  
-- Cloud deployment using MongoDB Atlas  
+- Online payment gateway integration (UPI, Debit/Credit Cards)
+- Live order tracking system
+- Sales analytics and reporting dashboard
+- AI-based food recommendations
+- Mobile application (Android / iOS)
+- Cloud deployment using MongoDB Atlas
 
 ---
 
 ## 👨‍💻 Developed By
 
-Abhik Mukherjee  
-B.Tech CSE  
-Dr. B.C. Roy Engineering College, Durgapur  
-
-Email    : abhikmukherjee2003@gmail.com  
-LinkedIn : https://www.linkedin.com/in/abhik-mukherjee-b6a15920a  
+Name    : Abhik Mukherjee  
+Degree  : B.Tech CSE  
+College : Dr. B.C. Roy Engineering College, Durgapur  
+GitHub  : https://github.com/Abhik-08  
+LinkedIn: https://www.linkedin.com/in/abhik-mukherjee-b6a15920a  
+Email   : abhikmukherjee2003@gmail.com
