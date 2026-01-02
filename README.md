@@ -51,46 +51,48 @@ IDE       : IntelliJ IDEA
 
 ## 📸 Screenshots
 
-### Home Page
+## Home Page
 ![Home Page](screenshots/figure1_home.png)
 
-### Features Window
+## Features Window
 ![Features Window](screenshots/figure2_features.png)
 
-### Restaurants Browsing Page
+## Restaurants Browsing Page
 ![Restaurants Page](screenshots/figure3_restaurants.png)
 
-### Menu Page (Pizza Hut)
+## Menu Page (Pizza Hut)
 ![Menu Page](screenshots/figure4_menu.png)
 
-### Available Coupons
+## Available Coupons
 ![Coupons](screenshots/figure5_coupons.png)
 
-### Payment Summary
+## Payment Summary
 ![Payment Summary](screenshots/figure6_payment.png)
 
-### PDF Bill Generated
+## PDF Bill Generated
 ![PDF Bill](screenshots/figure7_bill.png)
 
 ---
 
 ## ▶️ Steps to Run (Using IntelliJ IDEA)
 
-git clone https://github.com/Abhik-08/AbhiSwaad.git
-cd AbhiSwaad
-mvn clean install
+1. git clone https://github.com/Abhik-08/AbhiSwaad.git
 
-Open IntelliJ IDEA  
+2. cd AbhiSwaad
+
+3. mvn clean install
+
+4. Open IntelliJ IDEA  
 File -> Open -> Select AbhiSwaad folder  
-Set Project SDK -> JDK 17  
-Run -> Edit Configurations -> Add Tomcat (Local)  
-Select Apache Tomcat 10.1  
-Click Run ▶️  
+5. Set Project SDK -> JDK 17 + 
+6. Run -> Edit Configurations -> Add Tomcat (Local)  
+7. Select Apache Tomcat 10.1  
+8. Click Run ▶️  
 
-Ensure MongoDB is running locally:  
+9. Ensure MongoDB is running locally:  
 mongodb://localhost:27017  
 
-Application URL:  
+10. Application URL:  
 http://localhost:8080/AbhiSwaad  
 
 ---
